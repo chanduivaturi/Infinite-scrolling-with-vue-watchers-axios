@@ -1,4 +1,4 @@
-# infinite-scrolling-vue-watchers-axios
+# infinite-scrolling-with-vue-watchers-axios
 Infinite Scrolling in Vue with asynchronous loading through Watchers/Axios to add more info
             <hr>
             <h6>Methods:</h6>
