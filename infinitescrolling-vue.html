@@ -1,0 +1,204 @@
+<html>
+
+<head>
+    <script src="https://unpkg.com/vue"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+    <style>
+        .post-body {
+            margin-top: 50px;
+        }
+        
+        .post-container {
+            width: 40%;
+            margin: 0px auto;
+        }
+        
+        .post-box {
+            display: block;
+            width: 100%;
+            margin: 10px;
+            padding: 15px;
+            box-shadow: 0px 0px 1px #303030;
+        }
+        
+        .post-box:hover {
+            box-shadow: 0px 0px 3px #303030;
+        }
+        
+        .showMore {
+            display: flex;
+            align-items: center;
+            margin: 0px auto;
+            text-align: center;
+            display: inline-block;
+            padding: 10px 20px;
+            color: white;
+            background: #303030;
+        }
+        
+        .loader {
+            margin: 0px auto;
+        }
+        
+        .left-sideNav {
+            text-align: justify;
+            display: block;
+            padding: 10px;
+            position: fixed;
+            top: 50px;
+            left: 50px;
+            width: 25%;
+            border-right: 1px solid lightgray;
+            padding-right: 30px;
+            max-height: calc(100% - 100px);
+            overflow-y: auto;
+        }
+        
+        .right-sideNav {
+            display: block;
+            padding: 10px;
+            width: 200px;
+            position: fixed;
+            top: 50px;
+            right: 200px;
+            width: 200px;
+            border-left: 1px solid lightgray;
+            padding-left: 50px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="left-sideNav">
+            <h4 class="text-info">Infinite Scrolling in Vue with asynchronous loading through Watchers/Axios to add more info</h4>
+            <hr>
+            <h6>Methods:</h6>
+            <ul>
+                <li>
+                    We Define our methods using the methods member. Methods allow us create functions and bind events to these functions as well as handle these events. In the scrollCheck() function, we use three properties<span class="text-info">(window.scrollY, window.innerHeight, document.documentElement.offsetHeight)</span> to manually create our infinite scroll feature:
+                </li>
+                <li>
+                    <b>loadPosts():</b> is core part of the application which load posts from a open source JSON API Sever using <span class="text-danger">AXIOS</span>
+                </li>
+                <li>
+                    <b>resetData():</b> To reset all the selected options from Controls section
+                </li>
+            </ul>
+            <hr>
+            <h6>Watchers:</h6>
+            <ul>
+                <li>We created one watch member,so that when ever the data in <span class="text-danger">endOfTheScreen</span> watches for changes to the state of the app and updates the DOM accordingly
+                </li>
+            </ul>
+            <hr>
+            <h6>Created:</h6>
+            <ul>
+                <li>Since the processing of the options is finished you have access to reactive data properties and change them if you want</li>
+            </ul>
+            <hr>
+            <h6>Controls:</h6>
+            <ul>
+                <li><b>Disable/Enable Auto Loading:</b> You want to disable/enable auto loading of posts using direct button control(Incase if you want to save users internet from loading posts unneccessarily)</li>
+                <li><b>Select Limit:</b> You can limit No of Posts you want to get as response</li>
+                <li><b>Load Posts:</b> Direct loading of posts based on selected controls</li>
+                <li><b>Reset Everything:</b> To reset all your controls to actual without reloading</li>
+            </ul>
+        </div>
+
+        <div class="right-sideNav">
+            <h4>Controls</h4>
+            <button class="btn btn-primary btn-sm fixed" @click="autoLoading=false" v-if="autoLoading">Disable Auto Loading</button>
+            <button class="btn btn-primary btn-sm fixed" @click="autoLoading=true" v-if="!autoLoading">Enable Auto Loading</button>
+            <hr>
+            <h6>Select Limit</h6>
+            <select name="postlimit" class="form-control" v-model="limit">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+            </select>
+            <hr>
+            <div class="btn btn-info btn-sm " @click="loadPosts(pageno+1,limit)">Load Posts</div>
+            <hr>
+            <button class="btn btn-danger btn-sm " @click="resetData()">Reset Everything</button>
+        </div>
+        <div class="post-body">
+            <div v-if="posts.length>0" class="post-container">
+                <div v-for="post in posts" class="card post-box">
+                    <div class="card-body">
+                        <h5>{{post.title}}</h5>
+                        <p>{{post.body}}</p>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: center;">
+                <div class="btn btn-info" v-if="showbtn" @click="loadPosts(pageno+1,limit)">Show More</div>
+                <div class="loader" v-if="isLoading"><img src="./loader.gif" height="80px" alt="Loading..."></div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    new Vue({
+        el: "#app",
+        data() {
+            return {
+                endOfTheScreen: false,
+                isLoading: false,
+                pageno: 1,
+                limit: 5,
+                posts: [],
+                showbtn: false,
+                autoLoading: true,
+            }
+        },
+        watch: {
+            endOfTheScreen(endOfTheScreen) {
+                if (endOfTheScreen === true && this.autoLoading) {
+                    this.pageno += 1;
+                    this.loadPosts(this.pageno, this.limit);
+                }
+            }
+        },
+        created() {
+            window.onscroll = () => {
+                this.endOfTheScreen = this.scrollCheck();
+            };
+            this.loadPosts();
+        },
+        methods: {
+            scrollCheck() {
+                return window.scrollY + window.innerHeight === document.documentElement.offsetHeight;
+            },
+            loadPosts(page = this.pageno, limit = this.limit) {
+                this.showbtn = false;
+                this.isLoading = true;
+                const _self = this;
+                setTimeout(function() {
+                    axios.get("https://jsonplaceholder.typicode.com/posts?_page=" + page + "&_limit=" + limit).then(response => {
+                        for (let i in response.data) {
+                            _self.posts.push(response.data[i]);
+                        }
+                        _self.isLoading = false;
+                        _self.showbtn = true;
+                    });
+
+                }, 2000);
+            },
+            resetData() {
+                this.autoLoading = true;
+                this.showbtn = false;
+                this.limit = 1;
+                this.pageno = 1;
+                this.posts = [];
+                this.loadPosts();
+            }
+        },
+    });
+</script>
+
+</html>
